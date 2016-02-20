@@ -108,4 +108,15 @@ public:
 /*
  * Detector
  */
-vector<cv::Rect_<int> >* pedDetector(cv::Mat);
+class PedDetector {
+  public:
+    PedDetector();
+    ~PedDetector();
+    vector<cv::Rect_<int> >* detect(cv::Mat);
+
+  private:
+    ClassRectangles *rectangles_;
+    ClassData *classData_;
+    classifierInput *sctInput_; 
+    helperXMLParser *parsed_;
+};

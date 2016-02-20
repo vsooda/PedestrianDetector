@@ -1,1 +1,0 @@
-/home/sooda/project/PedestrianDetector/build/CMakeFiles/peddetector.dir

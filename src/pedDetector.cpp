@@ -95,11 +95,52 @@ void helperXMLParser::print(){
 }
 //*/
 
-vector<Rect_<int> >* pedDetector(Mat img_original){
+
+
+PedDetector::PedDetector() {
+  parsed_ = new helperXMLParser("data/configuration.xml");
+  if(parsed_->verbose)
+    parsed_->print();
+/*
+   * Prepares the Strong Classifier Inputs
+   */
+  // Rectangles Data
+  rectangles_ = new ClassRectangles(parsed_->rectFile,
+                                    parsed_->nrFeatures, 
+                                    parsed_->nrProp);
+  
+  // Classifier Data
+  classData_ = new ClassData(parsed_->classFile,
+                             parsed_->nrClass, 
+                             parsed_->nrCol);
+  
+  // Setup the classifier
+  sctInput_ = new classifierInput(classData_, 
+                                  rectangles_,
+                                  parsed_->verbose,
+                                  parsed_->widthOverHeight,
+                                  parsed_->shrinkFactor,
+                                  parsed_->theoWWidth,
+                                  parsed_->theoWHeight,
+                                  parsed_->theoActWWidth,
+                                  parsed_->theoActWHeight,
+                                  parsed_->nBaseFeatures,
+                                  parsed_->nExtraFeatures
+                                 );
+
+
+
+}
+
+PedDetector::~PedDetector() {
+  delete rectangles_;
+  delete classData_;
+  delete sctInput_;
+  delete parsed_;
+}
+
+vector<Rect_<int> >* PedDetector::detect(Mat img_original){
   // Lets open the configuration file
-  helperXMLParser parsed = helperXMLParser("data/configuration.xml");
-  if(parsed.verbose)
-    parsed.print();
   
   // These are helper variables
   Mat image, imagef, imageO = img_original;
@@ -139,39 +180,12 @@ vector<Rect_<int> >* pedDetector(Mat img_original){
 
   // Minimum Dimensions
   delete(pInput->minDs);
-  int *minDs = new int[2]{parsed.minH,parsed.minW};
+  int *minDs = new int[2]{parsed_->minH,parsed_->minW};
   pInput->minDs = minDs;
 
-  /*
-   * Prepares the Strong Classifier Inputs
-   */
-  // Rectangles Data
-  ClassRectangles *rectangles = new ClassRectangles(parsed.rectFile,
-                                                    parsed.nrFeatures, 
-                                                    parsed.nrProp);
-  
-  // Classifier Data
-  ClassData *classData = new ClassData(parsed.classFile,
-                                       parsed.nrClass, 
-                                       parsed.nrCol);
-  
-  // Setup the classifier
-  classifierInput *sctInput = new classifierInput(classData, 
-                                                  rectangles,
-                                                  parsed.verbose,
-                                                  parsed.widthOverHeight,
-                                                  parsed.shrinkFactor,
-                                                  parsed.theoWWidth,
-                                                  parsed.theoWHeight,
-                                                  parsed.theoActWWidth,
-                                                  parsed.theoActWHeight,
-                                                  parsed.nBaseFeatures,
-                                                  parsed.nExtraFeatures
-                                                 );
-
-  // Padding
+    // Padding
   delete(pInput->pad);
-  int *pad = new int[2]{sctInput->theoreticalVerticalPadding, sctInput->theoreticalHorizontalPadding};
+  int *pad = new int[2]{sctInput_->theoreticalVerticalPadding, sctInput_->theoreticalHorizontalPadding};
   pInput->pad = pad;
 
   /*
@@ -182,9 +196,9 @@ vector<Rect_<int> >* pedDetector(Mat img_original){
   /*
    * Running the detector
    */
-  vector<cv::Rect_<int> >* rects = sctRun(pOutput, sctInput);
+  vector<cv::Rect_<int> >* rects = sctRun(pOutput, sctInput_);
 
-  if(parsed.verbose)
+  if(parsed_->verbose)
     cout << "Ended my work." << endl;
   
   /*
@@ -193,9 +207,6 @@ vector<Rect_<int> >* pedDetector(Mat img_original){
   delete(minDs);
   delete(pInput);
   delete(pOutput);
-  delete(rectangles);
-  delete(classData);
-  delete(sctInput);
   wrFree(img - misalign);
   return rects;
 }
