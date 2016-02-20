@@ -63,6 +63,7 @@ int main(int argc, char *argv[]){
   if(!parseInput(argc - 1, argv, filename))
     return 0;
   
+    std::cout << filename << std::endl;
 	Mat image = imread(filename.c_str());
 	
 	/*
@@ -73,14 +74,14 @@ int main(int argc, char *argv[]){
 	/*
 	 * OpenCV Output
 	 */
-	/*/
+	
 	namedWindow("Teste", CV_WINDOW_NORMAL);
 	vector<cv::Rect_<int> >::iterator it;
 	for(it = rects->begin(); it != rects->end(); it++)
 		rectangle(image, *it, Scalar_<int>(255,0,0));
 	imshow("Teste", image);
 	waitKey(0);
-  //*/
+ 
   
 	/*
 	 * File Output
@@ -91,7 +92,7 @@ int main(int argc, char *argv[]){
   myfile << "Each line of this file is of the type:" << endl 
          << "ID : X, Y, Height, Width" << endl;
   
-	vector<cv::Rect_<int> >::iterator it;
+	//vector<cv::Rect_<int> >::iterator it;
 	int detection = 0;
 	for(it = rects->begin(); it != rects->end(); it++, detection++){
 	  myfile << detection << " : " << it->x << ", " << it->y << ", " << 

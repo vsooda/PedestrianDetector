@@ -97,7 +97,7 @@ void helperXMLParser::print(){
 
 vector<Rect_<int> >* pedDetector(Mat img_original){
   // Lets open the configuration file
-  helperXMLParser parsed = helperXMLParser("configuration.xml");
+  helperXMLParser parsed = helperXMLParser("data/configuration.xml");
   if(parsed.verbose)
     parsed.print();
   

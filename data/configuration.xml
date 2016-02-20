@@ -46,11 +46,11 @@
     theoActWWidth="39.36"
     theoActWHeight="96"
     
-    rectFile="rectangles.dat"
+    rectFile="data/rectangles.dat"
     nrFeatures="3000"
     nrProp="5"
     
-    classFile="StrongClassifierTreeStep9.txt"
+    classFile="data/StrongClassifierTreeStep9.txt"
     nrClass="1000"
     nrCol="14"
     
