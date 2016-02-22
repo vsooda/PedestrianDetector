@@ -58,6 +58,50 @@ int parseInput(int argc, char *argv[], string &filename){
   }
 }
 
+
+//cv::Mat getHogDescriptMat(const cv::Mat& image) {
+//    std::cout << image.size() << std::endl;
+//    HOGDescriptor hog;
+//    vector<float> descriptors;
+//    cv::Mat src = image.clone();
+//    cv::resize(src, src, cv::Size(64,128));
+//    hog.compute(src, descriptors, cv::Size(1,1));
+//    cv::Mat hogmat = cv::Mat(descriptors);
+//    return hogmat;
+//}
+cv::Mat getHogDescriptMat(const cv::Mat& image) {
+    std::cout << image.size() << std::endl;
+    HOGDescriptor hog;
+    vector<float> descriptors;
+    cv::Mat src;
+    cv::resize(image, src, cv::Size(64,128));
+    std::cout << src.rowRange(0, 5).colRange(0, 5) << std::endl;
+    hog.compute(src, descriptors, cv::Size(1,1));
+    cv::Mat hogmat = cv::Mat(descriptors);
+    //std::cout << hogmat.rowRange(0, 10) << std::endl;
+    //std::cout << "hogmat size: " << hogmat.size() << std::endl;
+    return hogmat;
+}
+
+double getCosSimirity(cv::Mat a, cv::Mat b) {
+    std::cout << "getcosSimirity" << std::endl;
+    double ab = a.dot(b);
+    double aa = a.dot(a);
+    double bb = b.dot(b);
+    std::cout << ab << " " << aa << " " << bb << std::endl;
+    double sim = ab / sqrt(aa*bb);
+    return sim;
+}
+
+double getHogCosSimirity(cv::Mat image1, cv::Mat image2) {
+    std::cout << "gethogCossimirity" << std::endl;
+    cv::Mat ahogMat = getHogDescriptMat(image1).clone();//if not clone, ahogmat will be the same with bhogmat, don't know why
+    cv::Mat bhogMat = getHogDescriptMat(image2).clone();
+    std::cout << ahogMat.rowRange(0, 10) << std::endl;
+    std::cout << ahogMat.rowRange(0, 10) << std::endl;
+    return getCosSimirity(ahogMat, bhogMat);
+}
+
 void videoPerestrianDetectTest(const char* filename) {
     bool fromfile = true;
     VideoCapture capture;
@@ -93,7 +137,7 @@ void videoPerestrianDetectTest(const char* filename) {
 
     PedDetector pd;
 
-    cv::Mat oldMat;
+    cv::Mat priImage;
     int index = 0; 
     while(capture.read(frame))
     {
@@ -108,37 +152,44 @@ void videoPerestrianDetectTest(const char* filename) {
         for(it = rects->begin(); it != rects->end(); it++)
             rectangle(image, *it, Scalar_<int>(255,0,0));
         if (rects->size() > 0) {
-            HOGDescriptor hog;
             //HOGDescriptor *phog = new HOGDescriptor(cv::Size(64, 128), cv::Size(16, 16), cv::Size(2, 2), cv::Size(2, 2), 9);
             cv::Mat gray;
             cvtColor(frame, gray, COLOR_BGR2GRAY );
             
-            vector<float> descriptors;
             cv::Rect rect = (*rects)[0];
             cv::Mat roi;
-            cv::resize(gray(rect).clone(), roi, cv::Size(64,128));
-            hog.compute(roi, descriptors, cv::Size(1,1));
-            cv::Mat hogmat = cv::Mat(descriptors);
-            std::cout << hogmat.size() << std::endl;
+            roi = gray(rect).clone();
+            //cv::Mat hogmat = getHogDescriptMat(roi);
+            //std::cout << hogmat.size() << std::endl;
 
-            if (oldMat.data != NULL) {
-                double ab = oldMat.dot(hogmat);
-                double aa = oldMat.dot(oldMat);
-                double bb = hogmat.dot(hogmat);
-                double sim = ab / sqrt(aa*bb);
+            if (priImage.data != NULL) {
+                std::cout << roi.size() << " " << priImage.size() << std::endl;
+                double sim = getHogCosSimirity(roi, priImage);
                 std::cout << "simirity: " << sim << std::endl;
-
             }
-            oldMat = hogmat.clone();
+            priImage = roi.clone();
         }
         imshow("pedDetector", image);
-        if (cv::waitKey(5) == 'q') {
+        if (cv::waitKey(100) == 'q') {
             break;
         }
     }
 }
 
+
+void simarity_test() {
+    cv::Mat a = cv::imread("data/a.png", 0);
+    cv::Mat b = cv::imread("data/b.png", 0);
+    cv::Mat c = cv::imread("data/c.png", 0);
+    double sim_ab = getHogCosSimirity(a, b);
+    double sim_ac = getHogCosSimirity(a, c);
+    double sim_bc = getHogCosSimirity(b, c);
+    std::cout << sim_ab << " " << sim_ac  << " " << sim_bc<< std::endl;
+}
+
 int main(int argc, char *argv[]){
+    //simarity_test();
+    //return 0;
     videoPerestrianDetectTest("data/test.avi");
     return 0;
 
