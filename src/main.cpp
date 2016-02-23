@@ -80,7 +80,7 @@ cv::Mat getHogDescriptMat(const cv::Mat& image) {
     cv::Mat hogmat = cv::Mat(descriptors);
     //std::cout << hogmat.rowRange(0, 10) << std::endl;
     //std::cout << "hogmat size: " << hogmat.size() << std::endl;
-    return hogmat;
+    return hogmat.clone();
 }
 
 double getCosSimirity(cv::Mat a, cv::Mat b) {
@@ -164,7 +164,7 @@ void videoPerestrianDetectTest(const char* filename) {
 
             if (priImage.data != NULL) {
                 std::cout << roi.size() << " " << priImage.size() << std::endl;
-                double sim = getHogCosSimirity(roi, priImage);
+                double sim = getHogCosSimirity(roi.clone(), priImage.clone());
                 std::cout << "simirity: " << sim << std::endl;
             }
             priImage = roi.clone();
