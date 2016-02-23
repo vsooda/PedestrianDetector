@@ -17,6 +17,7 @@
  * Our detector
  */
 #include "../include/pedDetector.hpp"
+#include "../include/CompressiveTracker.h"
 
 /*
  * OpenCV Includes
@@ -93,46 +94,63 @@ void videoPerestrianDetectTest(const char* filename) {
 
     PedDetector pd;
 
+
     cv::Mat oldMat;
     int index = 0; 
-    while(capture.read(frame))
+    bool detected = false;
+    cv::Rect rect;
+    cv::Mat gray;
+    while(capture.read(frame) && !detected)
     {
         std::cout << index++ << std::endl;
         image = frame.clone(); 
         clock_t a,b;
         a = clock();
-        vector<cv::Rect_<int> >* rects = pd.detect(image);
-        b = clock();
-        std::cout << (b-a)* 1000.0 / CLOCKS_PER_SEC << std::endl;
-        vector<cv::Rect_<int> >::iterator it;
-        for(it = rects->begin(); it != rects->end(); it++)
-            rectangle(image, *it, Scalar_<int>(255,0,0));
-        if (rects->size() > 0) {
-            HOGDescriptor hog;
-            //HOGDescriptor *phog = new HOGDescriptor(cv::Size(64, 128), cv::Size(16, 16), cv::Size(2, 2), cv::Size(2, 2), 9);
-            cv::Mat gray;
-            cvtColor(frame, gray, COLOR_BGR2GRAY );
-            
-            vector<float> descriptors;
-            cv::Rect rect = (*rects)[0];
-            cv::Mat roi;
-            cv::resize(gray(rect).clone(), roi, cv::Size(64,128));
-            hog.compute(roi, descriptors, cv::Size(1,1));
-            cv::Mat hogmat = cv::Mat(descriptors);
-            std::cout << hogmat.size() << std::endl;
+        if (!detected) {
+            detected = true;
+            vector<cv::Rect_<int> >* rects = pd.detect(image);
+            b = clock();
+            std::cout << (b-a)* 1000.0 / CLOCKS_PER_SEC << std::endl;
+            vector<cv::Rect_<int> >::iterator it;
+            for(it = rects->begin(); it != rects->end(); it++)
+                rectangle(image, *it, Scalar_<int>(255,0,0));
+            if (rects->size() > 0) {
+                HOGDescriptor hog;
+                cvtColor(frame, gray, COLOR_BGR2GRAY );
+                
+                vector<float> descriptors;
+                rect = (*rects)[0];
+                cv::Mat roi;
+                cv::resize(gray(rect).clone(), roi, cv::Size(64,128));
+                hog.compute(roi, descriptors, cv::Size(1,1));
+                cv::Mat hogmat = cv::Mat(descriptors);
 
-            if (oldMat.data != NULL) {
-                double ab = oldMat.dot(hogmat);
-                double aa = oldMat.dot(oldMat);
-                double bb = hogmat.dot(hogmat);
-                double sim = ab / sqrt(aa*bb);
-                std::cout << "simirity: " << sim << std::endl;
+                if (oldMat.data != NULL) {
+                    double ab = oldMat.dot(hogmat);
+                    double aa = oldMat.dot(oldMat);
+                    double bb = hogmat.dot(hogmat);
+                    double sim = ab / sqrt(aa*bb);
+                    std::cout << "simirity: " << sim << std::endl;
 
+                }
+                oldMat = hogmat.clone();
             }
-            oldMat = hogmat.clone();
         }
+
         imshow("pedDetector", image);
         if (cv::waitKey(5) == 'q') {
+            break;
+        }
+    }
+
+	CompressiveTracker ct;
+    ct.init(gray, rect);
+    while (capture.read(frame)) {
+        cvtColor(frame, gray, COLOR_BGR2GRAY );
+		ct.processFrame(gray, rect);
+		rectangle(frame, rect, Scalar(0,0,255));
+        cv::imshow("pedDetector", frame);
+        if (cv::waitKey(33) == 'q') {
             break;
         }
     }

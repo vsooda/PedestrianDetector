@@ -108,16 +108,16 @@ pyrOutput* chnsPyramid(float *image, pyrInput *input){
 	bool ok = true;
 	for (int j = 0; j < countIsR; j++)
 	    if(i == isR[j]){
-		ok = false;
-		break;
+            ok = false;
+            break;
 	    }
 
-	if (ok){
-	    isA[auxI] = i;
-	    auxI++;
-	}
+        if (ok){
+            isA[auxI] = i;
+            auxI++;
+        }
 
-	isN[i] = i;
+        isN[i] = i;
     }
 
     int *auxIsJ;
@@ -147,103 +147,103 @@ pyrOutput* chnsPyramid(float *image, pyrInput *input){
 
     int shrink = input->shrink;
     float shr[3] = { 0, 0, 0};
-    for (int it = 0, i = isR[0]; it < countIsR; it++, i=isR[it]){
-	float scale = scales[i];
-	int newHeight = round((float) heightO * (float) scale /
-			(float) shrink) * shrink;
+    for (int it = 0, i = isR[0]; it < countIsR; it++, i=isR[it]) {
+        float scale = scales[i];
+        int newHeight = round((float) heightO * (float) scale /
+                (float) shrink) * shrink;
 
-	int newWidth = round((float) widthO * (float) scale /
-			(float) shrink) * shrink;
-	
-	float *I1;
-	if ( height == newHeight && width == newWidth){
-	    //TODO :: WARNING :: Should I copy it over?
-	    I1 = (float*) wrCalloc(height*width*channels + misalign,
-		  sOfF) + misalign;
+        int newWidth = round((float) widthO * (float) scale /
+                (float) shrink) * shrink;
+        
+        float *I1;
+        if ( height == newHeight && width == newWidth){
+            //TODO :: WARNING :: Should I copy it over?
+            I1 = (float*) wrCalloc(height*width*channels + misalign,
+              sOfF) + misalign;
 
-	    int lengthArray = height*width*channels;
-	    for (int j = 0; j < lengthArray; j++)
-		    I1[j] = I[j];
-	}else{
-	    I1 = (float*) wrCalloc(newHeight*newWidth*channels + misalign,
-		  sOfF) + misalign;
+            int lengthArray = height*width*channels;
+            for (int j = 0; j < lengthArray; j++)
+                I1[j] = I[j];
+        }else{
+            I1 = (float*) wrCalloc(newHeight*newWidth*channels + misalign,
+              sOfF) + misalign;
 
-	    //TODO :: WARNING :: Hardcoded value :: 1.f
-	    resample(I, I1, height, newHeight, width, newWidth, channels, 1.f);
-	}
+            //TODO :: WARNING :: Hardcoded value :: 1.f
+            resample(I, I1, height, newHeight, width, newWidth, channels, 1.f);
+        }
 
-	if (scale == 0.5f && (input->nApprox > 0 || input->nPerOct == 1)){
-	    //TODO :: WARNING :: Should I free "I"?
-	    // I replace old I with new I1, as I reduced the image to half size
-	    free(I);
+        if (scale == 0.5f && (input->nApprox > 0 || input->nPerOct == 1)){
+            //TODO :: WARNING :: Should I free "I"?
+            // I replace old I with new I1, as I reduced the image to half size
+            free(I);
 
-	    I = I1;
-	    height = newHeight;
-	    width = newWidth;
-	}
+            I = I1;
+            height = newHeight;
+            width = newWidth;
+        }
 
-	//TODO :: WARNING :: Hardcoded value :: downsample
-	float *I2 = 0;
-	int downsample = 1;
-	convTriAux(I1, I2, misalign, newHeight, newWidth, channels,
-		input->smoothIm, downsample
-		);
+        //TODO :: WARNING :: Hardcoded value :: downsample
+        float *I2 = 0;
+        int downsample = 1;
+        convTriAux(I1, I2, misalign, newHeight, newWidth, channels,
+            input->smoothIm, downsample
+            );
 
-	/*
-	 * Channels Compute for this isR[i] scale
-	 */
-	infoOut *chns = chnsCompute(I2, newHeight, newWidth, channels,
-			input->pchns
-			);
+        /*
+         * Channels Compute for this isR[i] scale
+         */
+        infoOut *chns = chnsCompute(I2, newHeight, newWidth, channels,
+                input->pchns
+                );
 
-	imgWrap **data1 = chns->data;
-	wrFree(I2-misalign);
-	nTypes = chns->nTypes;
+        imgWrap **data1 = chns->data;
+        wrFree(I2-misalign);
+        nTypes = chns->nTypes;
 
-	if (i == isR[0]){
-	    /*
-	     * This is checking the size of each transformation. By design only
-	     * the H channel will have the correct dimensions.
-	     */
-	    for (int j = 0; j < nTypes; j++){
-		shr[j] = data1[j]->height;
-		shr[j] = newHeight / shr[j];
+        if (i == isR[0]){
+            /*
+             * This is checking the size of each transformation. By design only
+             * the H channel will have the correct dimensions.
+             */
+            for (int j = 0; j < nTypes; j++){
+                shr[j] = data1[j]->height;
+                shr[j] = newHeight / shr[j];
 
-		if (shr[j] > shrink || (int)shr[j] % 1 > 0){
-		    cout << "Something went wrong with the shrinking."
-			<< endl << "Source code line: " << __FILE__ << " @ "
-			<< __LINE__ << endl;
-		    return NULL; //This should never happen
-		}
+                if (shr[j] > shrink || (int)shr[j] % 1 > 0){
+                    cout << "Something went wrong with the shrinking."
+                    << endl << "Source code line: " << __FILE__ << " @ "
+                    << __LINE__ << endl;
+                    return NULL; //This should never happen
+                }
 
-		shr[j]=shr[j]/shrink;
-	    }
-	}
+                shr[j]=shr[j]/shrink;
+            }
+        }
 
-	for(int j = 0; j < nTypes; j++){
-	    if (shr[j] == 1)
-		continue;
+        for(int j = 0; j < nTypes; j++) {
+            if (shr[j] == 1)
+            continue;
 
-	    int nH = newHeight*shr[j],
-		nW = newWidth*shr[j],
-		chnsTransform = data1[j]->channels;
+            int nH = newHeight*shr[j],
+            nW = newWidth*shr[j],
+            chnsTransform = data1[j]->channels;
 
-	    float *chnTypeData = (float*) wrCalloc(nH*nW*channels + misalign,
-				sOfF) + misalign;
+            float *chnTypeData = (float*) wrCalloc(nH*nW*channels + misalign,
+                    sOfF) + misalign;
 
-	    //TODO :: WARNING :: Hardcoded value :: 1.f
-	    resample(data1[j]->image, chnTypeData, newHeight, nH, newWidth, nW,
-		    chnsTransform, 1.f
-		    );
+            //TODO :: WARNING :: Hardcoded value :: 1.f
+            resample(data1[j]->image, chnTypeData, newHeight, nH, newWidth, nW,
+                chnsTransform, 1.f
+                );
 
-	    data1[j]->height = nH;
-	    data1[j]->width = nW;
+            data1[j]->height = nH;
+            data1[j]->width = nW;
 
-	    wrFree(data1[j]->image - misalign);
-	    data1[j]->image = chnTypeData;
-	}
+            wrFree(data1[j]->image - misalign);
+            data1[j]->image = chnTypeData;
+        }
 
-	data[i] = data1;
+        data[i] = data1;
     }
 
     // In case I changed it when scale = 0.5f
@@ -255,66 +255,65 @@ pyrOutput* chnsPyramid(float *image, pyrInput *input){
  */
     int nApprox = input->nApprox;
     float *lambdas = input->lambdas;
-    if ( nApprox > 0 && !lambdas){
-	int nOctUp = input->nOctUp;
-	int nPerOct = input->nPerOct;
+    if ( nApprox > 0 && !lambdas) {
+        int nOctUp = input->nOctUp;
+        int nPerOct = input->nPerOct;
 
-	//TODO :: WARNING :: Yet again I start at 0.
-	// The is Vector :: is=1 + nOctUp*nPerOct:nApprox+1:nScales;
-	int countIs = 0;
+        //TODO :: WARNING :: Yet again I start at 0.
+        // The is Vector :: is=1 + nOctUp*nPerOct:nApprox+1:nScales;
+        int countIs = 0;
 
-	int *isTemp = new int[nScales];
-	for (int i = nOctUp*nPerOct; i < nScales; i += nApprox + 1){
-	    isTemp[countIs] = i;
-	    countIs++;
-	}
+        int *isTemp = new int[nScales];
+        for (int i = nOctUp*nPerOct; i < nScales; i += nApprox + 1){
+            isTemp[countIs] = i;
+            countIs++;
+        }
 
-	if (countIs > 2){
-	    isTemp[0] = isTemp[1];
-	    isTemp[1] = isTemp[2];
-	}else{
-	    cout << "Couldn't calculate lambdas. Not enough scales to use."
-		<< endl << "Source code line: " << __FILE__ << " @ "
-		<< __LINE__ << endl;
-	    return NULL;
-	}
-
-
-	float *f0 = new float[nTypes];
-	float *f1 = new float[nTypes];
-
-	imgWrap **d0 = data[isTemp[0]];
-	imgWrap **d1 = data[isTemp[1]];
-
-	for (int i = 0; i < nTypes; i++){
-	    float numElem = (float)
-			    (d0[i]->width * d0[i]->height * d0[i]->channels);
-
-	    float sumElem = 0.f;
-
-	    for (int j = 0; j < numElem; j++)
-		sumElem += d0[i]->image[j];
-
-	    f0[i] = sumElem / numElem;
-	}
-
-	for (int i = 0; i < nTypes; i++){
-	    float numElem = (float)
-			    (d1[i]->width * d1[i]->height * d1[i]->channels);
-
-	    float sumElem = 0.f;
-
-	    for (int j = 0; j < numElem; j++)
-		sumElem += d1[i]->image[j];
-
-	    f1[i] = sumElem / numElem;
-	}
+        if (countIs > 2){
+            isTemp[0] = isTemp[1];
+            isTemp[1] = isTemp[2];
+        } else {
+            cout << "Couldn't calculate lambdas. Not enough scales to use."
+            << endl << "Source code line: " << __FILE__ << " @ "
+            << __LINE__ << endl;
+            return NULL;
+        }
 
 
-	lambdas = new float[nTypes];
-	float lambdaValue = log2(scales[isTemp[0]] / scales[isTemp[1]]);
-	for (int i = 0; i < nTypes; i++)
-	    lambdas[i] = -log2(f0[i] / f1[i]) / lambdaValue;
+        float *f0 = new float[nTypes];
+        float *f1 = new float[nTypes];
+
+        imgWrap **d0 = data[isTemp[0]];
+        imgWrap **d1 = data[isTemp[1]];
+
+        for (int i = 0; i < nTypes; i++){
+            float numElem = (float)(d0[i]->width * d0[i]->height * d0[i]->channels);
+
+            float sumElem = 0.f;
+
+            for (int j = 0; j < numElem; j++)
+                sumElem += d0[i]->image[j];
+
+            f0[i] = sumElem / numElem;
+        }
+
+        for (int i = 0; i < nTypes; i++){
+            float numElem = (float)
+                    (d1[i]->width * d1[i]->height * d1[i]->channels);
+
+            float sumElem = 0.f;
+
+            for (int j = 0; j < numElem; j++)
+            sumElem += d1[i]->image[j];
+
+            f1[i] = sumElem / numElem;
+        }
+
+
+        lambdas = new float[nTypes];
+        float lambdaValue = log2(scales[isTemp[0]] / scales[isTemp[1]]);
+        for (int i = 0; i < nTypes; i++)
+            lambdas[i] = -log2(f0[i] / f1[i]) / lambdaValue;
     }
 
 /*
